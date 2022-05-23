@@ -1,0 +1,81 @@
+version: "3.9"
+
+services:
+
+  traefik:
+    image: traefik:v2.6
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik:/etc/traefik
+    labels:
+      traefik.enable: true
+      traefik.http.services.dashboard.loadbalancer.server.port: 888
+
+  mysql:
+    image: mysql
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - mysql_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ChatServer
+      MYSQL_USER: ChatServer
+      MYSQL_PASSWORD: SUPER_SECRET_PASSWORD
+    ports:
+      - 127.0.0.1:3306:3306
+
+  redis:
+    image: redis:alpine
+    restart: unless-stopped
+    command: redis-server --save 20 1 --loglevel warning --requirepass REDIS_PASSWORD
+    ports:
+      - 127.0.0.1:6379:6379
+
+  chat-server:
+    restart: unless-stopped
+    build:
+      context: ./Server
+    deploy:
+      replicas: 2
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      MYSQL_HOST: mysql
+      MYSQL_DATABASE: ChatServer
+      MYSQL_USER: ChatServer
+      MYSQL_PASSWORD: SUPER_SECRET_PASSWORD
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: REDIS_PASSWORD
+    depends_on:
+      - mysql
+      - redis
+    labels:
+      traefik.enable: true
+      traefik.http.routers.chat-server.rule: PathPrefix(`/hubs/`)
+      traefik.http.services.chat-server.loadbalancer.server.port: 80
+      traefik.http.services.chat-server.loadbalancer.sticky: true
+      traefik.http.services.chat-server.loadbalancer.sticky.cookie.name: srv_id
+
+  chat-web-ui:
+    restart: unless-stopped
+    build:
+      context: ./WebUI
+    labels:
+      traefik.enable: true
+      traefik.http.routers.chat-web-ui.rule: Path(`/`) || PathPrefix(`/static/`)
+      traefik.http.services.chat-web-ui.loadbalancer.server.port: 80
+
+volumes:
+  mysql_data: {}

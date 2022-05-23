@@ -1,0 +1,21 @@
+api:
+  dashboard: true
+
+entryPoints:
+  http:
+    address: ":80"
+  https:
+    address: ":443"
+
+providers:
+  file:
+    watch: true
+    directory: /etc/traefik
+  docker:
+    watch: true
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+
+accessLog: {}
+log:
+  level: warning

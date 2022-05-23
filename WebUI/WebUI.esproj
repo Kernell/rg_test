@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.VisualStudio.JavaScript.Sdk/0.5.26-alpha">
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>b67a2b9c-58c0-41c0-8575-fd6199557fed</ProjectGuid>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupCommand>npm start</StartupCommand>
+    <JavaScriptTestRoot>src\</JavaScriptTestRoot>
+    <JavaScriptTestFramework>Jest</JavaScriptTestFramework>
+    <BuildCommandWorkingDirectory>
+    </BuildCommandWorkingDirectory>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="src\Notification\" />
+    <Folder Include="src\Chat\" />
+  </ItemGroup>
+</Project>
